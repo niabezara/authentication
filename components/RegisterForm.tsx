@@ -1,12 +1,14 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handlesubmit = async (e: {
     target: any;
@@ -18,6 +20,18 @@ export default function RegisterForm() {
       return;
     }
     try {
+      const resUserExists = await fetch("api/userExists", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const { user } = await resUserExists.json();
+      if (user) {
+        setError("user already exists");
+        return;
+      }
+
       const res = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -28,6 +42,7 @@ export default function RegisterForm() {
       if (res.ok) {
         const form = e.target;
         form.reset();
+        router.push("/");
       } else {
         console.log("failed");
       }
